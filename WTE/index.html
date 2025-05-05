@@ -91,7 +91,7 @@
     }
 
     let recipes = [];
-    fetch('wsp-recipes-list.txt')
+    fetch('ul class=wsp-recipes-list.txt')
       .then(r => r.text())
       .then(html => {
         const doc = new DOMParser().parseFromString(html, 'text/html');
