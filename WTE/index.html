@@ -87,9 +87,9 @@
       }
     }
 
-    // טוען את כל המתכונים מקובץ הטקסט
+    // טוען את כל המתכונים מקובץ הטקסט המקומי בתיקייה זו
     let recipes = [];
-    fetch('wsp-recipes-list.txt')
+    fetch('ul class=wsp-recipes-list.txt')
       .then(r => r.text())
       .then(html => {
         const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -97,7 +97,7 @@
           title: a.textContent.trim(), url: a.href
         }));
       })
-      .catch(console.error);
+      .catch(err => console.error('Error loading recipes:', err));
 
     eatBtn.addEventListener('click', async () => {
       if (recipes.length === 0) {
