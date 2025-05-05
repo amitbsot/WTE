@@ -112,7 +112,7 @@
       const content = await fetchRecipeContent(choice.url);
       recipeContent.innerHTML = content || `
         <div class="error-fallback">
-          <img src="https://via.placeholder.com/50x50" alt="תמונת מתכון" />
+          <img src="https://via.placeholder.com/50" alt="תמונת מתכון" />
           <div class="error-message">לא ניתן לטעון את המתכון.</div>
           <a class="fallback-link" href="${choice.url}" target="_blank">פתחו את המתכון בגישה רגילה</a>
         </div>`;
