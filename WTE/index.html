@@ -36,14 +36,17 @@
       position: absolute; top: 10px; left: 10px;
       background: none; border: none; font-size: 1.5em; cursor: pointer;
     }
-    #recipeContent { margin-top: 2em; text-align: center; }
+    #recipeTitle {
+      font-size: 1.25em; font-weight: bold; margin: 0.5em 0;
+      text-align: center;
+    }
+    #recipeContent { margin-top: 1em; text-align: center; }
     .error-fallback img {
       display: block; margin: 0 auto 1em;
       width: 50px; height: 50px; object-fit: cover;
     }
     .error-message { color: red; font-weight: bold; padding: 1em; }
     .fallback-link { display: block; margin-top: 1em; }
-    #recipeTitle { font-size: 1.25em; font-weight: bold; margin-bottom: 0.5em; }
   </style>
 </head>
 <body>
@@ -87,9 +90,8 @@
       }
     }
 
-    // טוען את כל המתכונים מקובץ הטקסט המקומי בתיקייה זו
     let recipes = [];
-    fetch('ul class=wsp-recipes-list.txt')
+    fetch('wsp-recipes-list.txt')
       .then(r => r.text())
       .then(html => {
         const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -110,7 +112,7 @@
       const content = await fetchRecipeContent(choice.url);
       recipeContent.innerHTML = content || `
         <div class="error-fallback">
-          <img src="https://via.placeholder.com/50" alt="תמונת מתכון" />
+          <img src="https://via.placeholder.com/50x50" alt="תמונת מתכון" />
           <div class="error-message">לא ניתן לטעון את המתכון.</div>
           <a class="fallback-link" href="${choice.url}" target="_blank">פתחו את המתכון בגישה רגילה</a>
         </div>`;
