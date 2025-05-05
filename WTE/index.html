@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>מה לאכול?</title>
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%; width: 100%;
+      display: flex; justify-content: center; align-items: center;
+      direction: rtl; background: #f5f5f5; font-family: sans-serif;
+    }
+    #eatBtn {
+      padding: 1em 2em; font-size: 1.5em; border: none;
+      border-radius: 5px; background: #4CAF50; color: #fff;
+      cursor: pointer; transition: 0.3s; display: flex;
+      align-items: center; gap: 0.5em;
+    }
+    #eatBtn:disabled { background: #888; cursor: progress; }
+    #eatBtn:hover:enabled { background: #45A049; }
+    .loader {
+      border: 4px solid #f3f3f3; border-top: 4px solid #fff;
+      border-radius: 50%; width: 1em; height: 1em;
+      animation: spin 1s linear infinite; display: none;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    #recipeContainer {
+      display: none; position: relative; width: 80%; max-width: 600px;
+      margin: auto; background: #fff; padding: 1em;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      overflow: auto; max-height: 90%; opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    #recipeContainer.show { display: block; opacity: 1; }
+    #closeBtn {
+      position: absolute; top: 10px; left: 10px;
+      background: none; border: none; font-size: 1.5em; cursor: pointer;
+    }
+    #recipeContent { margin-top: 2em; text-align: center; }
+    .error-fallback img {
+      display: block; margin: 0 auto 1em;
+      width: 50px; height: 50px; object-fit: cover;
+    }
+    .error-message { color: red; font-weight: bold; padding: 1em; }
+    .fallback-link { display: block; margin-top: 1em; }
+    #recipeTitle { font-size: 1.25em; font-weight: bold; margin-bottom: 0.5em; }
+  </style>
+</head>
+<body>
+  <button id="eatBtn">
+    <span id="btnText">מה לאכול</span>
+    <span id="spinner" class="loader"></span>
+  </button>
+
+  <div id="recipeContainer">
+    <button id="closeBtn" aria-label="סגור">X</button>
+    <div id="recipeTitle"></div>
+    <div id="recipeContent"></div>
+  </div>
+
+  <script>
+    const eatBtn = document.getElementById('eatBtn');
+    const recipeContainer = document.getElementById('recipeContainer');
+    const recipeTitle = document.getElementById('recipeTitle');
+    const recipeContent = document.getElementById('recipeContent');
+    const closeBtn = document.getElementById('closeBtn');
+    const spinner = document.getElementById('spinner');
+    const btnText = document.getElementById('btnText');
+
+    function setButtonLoading(isLoading) {
+      btnText.textContent = isLoading ? 'טוען מתכון...' : 'מה לאכול';
+      spinner.style.display = isLoading ? 'inline-block' : 'none';
+      eatBtn.disabled = isLoading;
+    }
+
+    async function fetchRecipeContent(url) {
+      const proxy = 'https://api.allorigins.win/get?url=';
+      try {
+        const res = await fetch(proxy + encodeURIComponent(url));
+        if (!res.ok) throw new Error(res.status);
+        const { contents } = await res.json();
+        const doc = new DOMParser().parseFromString(contents, 'text/html');
+        const sel = doc.querySelector('.resipes__content, .recipes__content, .recipe-content, .entry-content');
+        return sel ? sel.innerHTML : null;
+      } catch {
+        return null;
+      }
+    }
+
+    // טוען את כל המתכונים מקובץ הטקסט
+    let recipes = [];
+    fetch('wsp-recipes-list.txt')
+      .then(r => r.text())
+      .then(html => {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        recipes = Array.from(doc.querySelectorAll('.wsp-recipes-list li a')).map(a => ({
+          title: a.textContent.trim(), url: a.href
+        }));
+      })
+      .catch(console.error);
+
+    eatBtn.addEventListener('click', async () => {
+      if (recipes.length === 0) {
+        alert('הרשימה עדיין נטענה, נסה שוב בעוד רגע');
+        return;
+      }
+      setButtonLoading(true);
+      const choice = recipes[Math.floor(Math.random() * recipes.length)];
+      recipeTitle.textContent = choice.title;
+      const content = await fetchRecipeContent(choice.url);
+      recipeContent.innerHTML = content || `
+        <div class="error-fallback">
+          <img src="https://via.placeholder.com/50" alt="תמונת מתכון" />
+          <div class="error-message">לא ניתן לטעון את המתכון.</div>
+          <a class="fallback-link" href="${choice.url}" target="_blank">פתחו את המתכון בגישה רגילה</a>
+        </div>`;
+      recipeContainer.classList.add('show');
+      eatBtn.style.display = 'none';
+      setButtonLoading(false);
+    });
+
+    closeBtn.addEventListener('click', () => {
+      recipeContainer.classList.remove('show');
+      recipeContent.innerHTML = '';
+      recipeTitle.textContent = '';
+      eatBtn.style.display = 'flex';
+      btnText.textContent = 'מה לאכול';
+      eatBtn.disabled = false;
+    });
+
+    window.addEventListener('offline', () => {
+      eatBtn.disabled = true;
+      btnText.textContent = 'אין חיבור אינטרנט';
+      spinner.style.display = 'none';
+    });
+
+    window.addEventListener('online', () => {
+      eatBtn.disabled = false;
+      btnText.textContent = 'מה לאכול';
+    });
+  </script>
+</body>
+</html>
