@@ -84,9 +84,11 @@ async function fetchRecipeContent(url) {
     const { contents } = await res.json();
     const doc = new DOMParser().parseFromString(contents, 'text/html');
 
+    // שליפת הקונטיינר הראשי
     const container = doc.querySelector('.container.container--inner');
     if (!container) return null;
 
+    // שליפת החלק עם המתכון
     const resipes = container.querySelector('.resipes');
     if (!resipes) return null;
 
@@ -94,10 +96,10 @@ async function fetchRecipeContent(url) {
     const content = resipes.querySelector('.resipes__content');
     if (!header || !content) return null;
 
-    // הסרת רכיבים לא רצויים
+    // הסרת מחלקות לא רלוונטיות
     content.querySelectorAll('.after_ingridients, .timer, .js-timer').forEach(el => el.remove());
 
-    // מחיקת כל מה שמופיע אחרי ה-<ol>
+    // הסרת כל מה שאחרי <ol>
     const ol = content.querySelector('ol');
     if (ol) {
       let node = ol.nextSibling;
@@ -117,6 +119,7 @@ async function fetchRecipeContent(url) {
     return null;
   }
 }
+
 
 
     let recipes = [];
