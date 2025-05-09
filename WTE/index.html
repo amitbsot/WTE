@@ -90,10 +90,8 @@
         const content = container.querySelector('.resipes__content');
         if (!header || !content) return null;
 
-        // הסר רכיבים מיותרים מתוך תוכן המתכון
         content.querySelectorAll('.after_ingridients, .timer, .js-timer').forEach(el => el.remove());
 
-        // חתוך כל מה שבא אחרי ol
         const ol = content.querySelector('ol');
         if (ol) {
           let node = ol.nextSibling;
@@ -130,12 +128,15 @@
       const choice = recipes[Math.floor(Math.random() * recipes.length)];
       recipeTitle.textContent = choice.title;
       const content = await fetchRecipeContent(choice.url);
-      recipeContent.innerHTML = content || `
-        <div class="error-fallback">
-          <img src="https://via.placeholder.com/50" alt="תמונת מתכון" />
-          <div class="error-message">לא ניתן לטעון את המתכון.</div>
-          <a class="fallback-link" href="${choice.url}" target="_blank">פתחו את המתכון בגישה רגילה</a>
-        </div>`;
+      if (content) {
+        recipeContent.innerHTML = content;
+      } else {
+        recipeContent.innerHTML = `
+          <div class="error-fallback">
+            <img src="https://via.placeholder.com/50" alt="תמונת מתכון" />
+            <a class="fallback-link" href="${choice.url}" target="_blank">פתחו את המתכון בגישה רגילה</a>
+          </div>`;
+      }
       recipeContainer.classList.add('show');
       eatBtn.style.display = 'none';
       setButtonLoading(false);
