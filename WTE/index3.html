@@ -83,6 +83,7 @@
         if (!res.ok) throw new Error(res.status);
         const { contents } = await res.json();
         const doc = new DOMParser().parseFromString(contents, 'text/html');
+
         const container = doc.querySelector('.container.container--inner');
         if (!container) return null;
 
@@ -90,7 +91,10 @@
         const content = container.querySelector('.resipes__content');
         if (!header || !content) return null;
 
+        // הסרת רכיבים לא רצויים
         content.querySelectorAll('.after_ingridients, .timer, .js-timer').forEach(el => el.remove());
+
+        // מחיקת כל מה שמופיע אחרי ה-<ol>
         const ol = content.querySelector('ol');
         if (ol) {
           let node = ol.nextSibling;
@@ -101,8 +105,12 @@
           }
         }
 
-        return `<div class="resipes__header">${header.innerHTML}</div><div class="resipes__content">${content.innerHTML}</div>`;
-      } catch {
+        return `
+          <div class="resipes__header">${header.innerHTML}</div>
+          <div class="resipes__content">${content.innerHTML}</div>
+        `;
+      } catch (e) {
+        console.error('Error fetching recipe:', e);
         return null;
       }
     }
