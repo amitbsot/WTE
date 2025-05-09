@@ -91,7 +91,6 @@
         if (!header || !content) return null;
 
         content.querySelectorAll('.after_ingridients, .timer, .js-timer').forEach(el => el.remove());
-
         const ol = content.querySelector('ol');
         if (ol) {
           let node = ol.nextSibling;
@@ -128,15 +127,11 @@
       const choice = recipes[Math.floor(Math.random() * recipes.length)];
       recipeTitle.textContent = choice.title;
       const content = await fetchRecipeContent(choice.url);
-      if (content) {
-        recipeContent.innerHTML = content;
-      } else {
-        recipeContent.innerHTML = `
-          <div class="error-fallback">
-            <img src="https://via.placeholder.com/50" alt="תמונת מתכון" />
-            <a class="fallback-link" href="${choice.url}" target="_blank">פתחו את המתכון בגישה רגילה</a>
-          </div>`;
-      }
+      recipeContent.innerHTML = content || `
+        <div class="error-fallback">
+          <img src="https://via.placeholder.com/50" alt="תמונת מתכון" />
+          <a class="fallback-link" href="${choice.url}" target="_blank">פתחו את המתכון בגישה רגילה</a>
+        </div>`;
       recipeContainer.classList.add('show');
       eatBtn.style.display = 'none';
       setButtonLoading(false);
