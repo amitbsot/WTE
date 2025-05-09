@@ -83,8 +83,28 @@
         if (!res.ok) throw new Error(res.status);
         const { contents } = await res.json();
         const doc = new DOMParser().parseFromString(contents, 'text/html');
-        const sel = doc.querySelector('.resipes__content, .recipes__content, .recipe-content, .entry-content');
-        return sel ? sel.innerHTML : null;
+        const container = doc.querySelector('.container.container--inner');
+        if (!container) return null;
+
+        const header = container.querySelector('.resipes__header');
+        const content = container.querySelector('.resipes__content');
+        if (!header || !content) return null;
+
+        // הסר רכיבים מיותרים מתוך תוכן המתכון
+        content.querySelectorAll('.after_ingridients, .timer, .js-timer').forEach(el => el.remove());
+
+        // חתוך כל מה שבא אחרי ol
+        const ol = content.querySelector('ol');
+        if (ol) {
+          let node = ol.nextSibling;
+          while (node) {
+            const next = node.nextSibling;
+            node.remove();
+            node = next;
+          }
+        }
+
+        return `<div class="resipes__header">${header.innerHTML}</div><div class="resipes__content">${content.innerHTML}</div>`;
       } catch {
         return null;
       }
