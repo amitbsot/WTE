@@ -76,44 +76,48 @@
       eatBtn.disabled = isLoading;
     }
 
-    async function fetchRecipeContent(url) {
-      const proxy = 'https://api.allorigins.win/get?url=';
-      try {
-        const res = await fetch(proxy + encodeURIComponent(url));
-        if (!res.ok) throw new Error(res.status);
-        const { contents } = await res.json();
-        const doc = new DOMParser().parseFromString(contents, 'text/html');
+async function fetchRecipeContent(url) {
+  const proxy = 'https://api.allorigins.win/get?url=';
+  try {
+    const res = await fetch(proxy + encodeURIComponent(url));
+    if (!res.ok) throw new Error(res.status);
+    const { contents } = await res.json();
+    const doc = new DOMParser().parseFromString(contents, 'text/html');
 
-        const container = doc.querySelector('.container.container--inner');
-        if (!container) return null;
+    const container = doc.querySelector('.container.container--inner');
+    if (!container) return null;
 
-        const header = container.querySelector('.resipes__header');
-        const content = container.querySelector('.resipes__content');
-        if (!header || !content) return null;
+    const resipes = container.querySelector('.resipes');
+    if (!resipes) return null;
 
-        // הסרת רכיבים לא רצויים
-        content.querySelectorAll('.after_ingridients, .timer, .js-timer').forEach(el => el.remove());
+    const header = resipes.querySelector('.resipes__header');
+    const content = resipes.querySelector('.resipes__content');
+    if (!header || !content) return null;
 
-        // מחיקת כל מה שמופיע אחרי ה-<ol>
-        const ol = content.querySelector('ol');
-        if (ol) {
-          let node = ol.nextSibling;
-          while (node) {
-            const next = node.nextSibling;
-            node.remove();
-            node = next;
-          }
-        }
+    // הסרת רכיבים לא רצויים
+    content.querySelectorAll('.after_ingridients, .timer, .js-timer').forEach(el => el.remove());
 
-        return `
-          <div class="resipes__header">${header.innerHTML}</div>
-          <div class="resipes__content">${content.innerHTML}</div>
-        `;
-      } catch (e) {
-        console.error('Error fetching recipe:', e);
-        return null;
+    // מחיקת כל מה שמופיע אחרי ה-<ol>
+    const ol = content.querySelector('ol');
+    if (ol) {
+      let node = ol.nextSibling;
+      while (node) {
+        const next = node.nextSibling;
+        node.remove();
+        node = next;
       }
     }
+
+    return `
+      <div class="resipes__header">${header.innerHTML}</div>
+      <div class="resipes__content">${content.innerHTML}</div>
+    `;
+  } catch (e) {
+    console.error('Error fetching recipe:', e);
+    return null;
+  }
+}
+
 
     let recipes = [];
     fetch('recipes-list.txt')
