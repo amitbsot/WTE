@@ -24,6 +24,7 @@
       animation: spin 1s linear infinite; display: none;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
     #recipeContainer {
       display: none; position: relative; width: 80%; max-width: 600px;
       margin: auto; background: #fff; padding: 1em;
@@ -31,7 +32,9 @@
       overflow: auto; max-height: 90%; opacity: 0;
       transition: opacity 0.3s ease;
     }
-    #recipeContainer.show { display: block; opacity: 1; }
+    #recipeContainer.show {
+      display: block; opacity: 1;
+    }
     #closeBtn {
       position: absolute; top: 10px; left: 10px;
       background: none; border: none; font-size: 1.5em; cursor: pointer;
@@ -40,13 +43,27 @@
       font-size: 1.25em; font-weight: bold; margin: 0.5em 0;
       text-align: center;
     }
-    #recipeContent { margin-top: 1em; text-align: center; }
+    #recipeContent {
+      margin-top: 1em; text-align: right; direction: rtl;
+    }
     .error-fallback img {
       display: block; margin: 0 auto 1em;
       width: 50px; height: 50px; object-fit: cover;
     }
     .error-message { color: red; font-weight: bold; padding: 1em; }
     .fallback-link { display: block; margin-top: 1em; }
+
+    #refreshBtn {
+      display: none;
+      margin: 1em auto 0;
+      padding: 0.75em 1.5em;
+      font-size: 1em;
+      border: none;
+      border-radius: 5px;
+      background-color: #2196F3;
+      color: white;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -59,6 +76,7 @@
     <button id="closeBtn" aria-label="סגור">X</button>
     <div id="recipeTitle"></div>
     <div id="recipeContent"></div>
+    <button id="refreshBtn">רענן מתכון</button>
   </div>
 
   <script>
@@ -69,6 +87,7 @@
     const closeBtn = document.getElementById('closeBtn');
     const spinner = document.getElementById('spinner');
     const btnText = document.getElementById('btnText');
+    const refreshBtn = document.getElementById('refreshBtn');
 
     function setButtonLoading(isLoading) {
       btnText.textContent = isLoading ? 'טוען מתכון...' : 'מה לאכול';
@@ -76,51 +95,45 @@
       eatBtn.disabled = isLoading;
     }
 
-async function fetchRecipeContent(url) {
-  const proxy = 'https://api.allorigins.win/get?url=';
-  try {
-    const res = await fetch(proxy + encodeURIComponent(url));
-    if (!res.ok) throw new Error(res.status);
-    const { contents } = await res.json();
-    const doc = new DOMParser().parseFromString(contents, 'text/html');
+    async function fetchRecipeContent(url) {
+      const proxy = 'https://api.allorigins.win/get?url=';
+      try {
+        const res = await fetch(proxy + encodeURIComponent(url));
+        if (!res.ok) throw new Error(res.status);
+        const { contents } = await res.json();
+        const doc = new DOMParser().parseFromString(contents, 'text/html');
 
-    // שליפת הקונטיינר הראשי
-    const container = doc.querySelector('.container.container--inner');
-    if (!container) return null;
+        const container = doc.querySelector('.container.container--inner');
+        if (!container) return null;
 
-    // שליפת החלק עם המתכון
-    const resipes = container.querySelector('.resipes');
-    if (!resipes) return null;
+        const resipes = container.querySelector('.resipes');
+        if (!resipes) return null;
 
-    const header = resipes.querySelector('.resipes__header');
-    const content = resipes.querySelector('.resipes__content');
-    if (!header || !content) return null;
+        const header = resipes.querySelector('.resipes__header');
+        const content = resipes.querySelector('.resipes__content');
+        if (!header || !content) return null;
 
-    // הסרת מחלקות לא רלוונטיות
-    content.querySelectorAll('.after_ingridients, .timer, .js-timer').forEach(el => el.remove());
+        content.querySelectorAll('.after_ingridients, .timer, .js-timer').forEach(el => el.remove());
 
-    // הסרת כל מה שאחרי <ol>
-    const ol = content.querySelector('ol');
-    if (ol) {
-      let node = ol.nextSibling;
-      while (node) {
-        const next = node.nextSibling;
-        node.remove();
-        node = next;
+        const ol = content.querySelector('ol');
+        if (ol) {
+          let node = ol.nextSibling;
+          while (node) {
+            const next = node.nextSibling;
+            node.remove();
+            node = next;
+          }
+        }
+
+        return `
+          <div class="resipes__header">${header.innerHTML}</div>
+          <div class="resipes__content">${content.innerHTML}</div>
+        `;
+      } catch (e) {
+        console.error('Error fetching recipe:', e);
+        return null;
       }
     }
-
-    return `
-      <div class="resipes__header">${header.innerHTML}</div>
-      <div class="resipes__content">${content.innerHTML}</div>
-    `;
-  } catch (e) {
-    console.error('Error fetching recipe:', e);
-    return null;
-  }
-}
-
-
 
     let recipes = [];
     fetch('recipes-list.txt')
@@ -133,7 +146,7 @@ async function fetchRecipeContent(url) {
       })
       .catch(err => console.error('Error loading recipes:', err));
 
-    eatBtn.addEventListener('click', async () => {
+    async function loadRandomRecipe() {
       if (recipes.length === 0) {
         alert('הרשימה עדיין נטענה, נסה שוב בעוד רגע');
         return;
@@ -149,8 +162,12 @@ async function fetchRecipeContent(url) {
         </div>`;
       recipeContainer.classList.add('show');
       eatBtn.style.display = 'none';
+      refreshBtn.style.display = 'block';
       setButtonLoading(false);
-    });
+    }
+
+    eatBtn.addEventListener('click', loadRandomRecipe);
+    refreshBtn.addEventListener('click', loadRandomRecipe);
 
     closeBtn.addEventListener('click', () => {
       recipeContainer.classList.remove('show');
@@ -159,6 +176,7 @@ async function fetchRecipeContent(url) {
       eatBtn.style.display = 'flex';
       btnText.textContent = 'מה לאכול';
       eatBtn.disabled = false;
+      refreshBtn.style.display = 'none';
     });
 
     window.addEventListener('offline', () => {
