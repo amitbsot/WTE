@@ -139,10 +139,15 @@
         if (!container) return null;
         const resipes = container.querySelector('.resipes');
         if (!resipes) return null;
+
         const header = resipes.querySelector('.resipes__header');
         const content = resipes.querySelector('.resipes__content');
         if (!header || !content) return null;
+
+        // Remove unwanted elements
         content.querySelectorAll('.after_ingridients, .timer, .js-timer').forEach(el => el.remove());
+
+        // Remove all content after <ol>
         const ol = content.querySelector('ol');
         if (ol) {
           let node = ol.nextSibling;
@@ -152,6 +157,7 @@
             node = next;
           }
         }
+
         return `<div class="resipes__header">${header.innerHTML}</div><div class="resipes__content">${content.innerHTML}</div>`;
       } catch (e) {
         console.error('Error fetching recipe:', e);
